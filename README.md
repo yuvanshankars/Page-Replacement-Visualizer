@@ -53,5 +53,13 @@ def optimal(pages, frame_size):
                 frame.append(page)
             page_faults += 1
     return page_faults
-
+# --- Input Section ---
+ref_string = input("Enter page reference string (space-separated): ")
+pages = list(map(int, ref_string.split()))
+frame_size = int(input("Enter number of frames: "))
+# --- Output Section ---
+print("\n--- Page Replacement Algorithms Comparison ---")
+print(f"Page faults using FIFO:    {fifo(pages, frame_size)}")
+print(f"Page faults using LRU:     {lru(pages, frame_size)}")
+print(f"Page faults using Optimal: {optimal(pages, frame_size)}")
 
