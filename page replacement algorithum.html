@@ -1,473 +1,547 @@
+                                                Homepage.html:
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Page Replacement Algorithm Simulator</title>
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
-    <style>
-        .frame {
-            height: 60px;
-            transition: all 0.3s ease;
-        }
-        .frame.active {
-            background-color: #3b82f6;
-            color: white;
-            transform: scale(1.05);
-        }
-        .frame.hit {
-            background-color: #10b981;
-            color: white;
-        }
-        .frame.fault {
-            background-color: #ef4444;
-            color: white;
-        }
-        .page-ref {
-            transition: all 0.3s ease;
-        }
-        .page-ref.active {
-            font-weight: bold;
-            color: #3b82f6;
-        }
-        .page-ref.hit {
-            color: #10b981;
-        }
-        .page-ref.fault {
-            color: #ef4444;
-        }
-    </style>
+<title>Page Replacement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css">
+<link rel="stylesheet" href="style.css">
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></script>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></script>
+<style>
+.afternav{
+margin-top: 50px; margin-left: 20px; margin-right: 20px; padding-top: 10px; padding-left: 20px; padding-bottom: 20px;
+box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); width:fit-content;
+background-color: azure; text-align: center;
+}
+.afternav1{
+box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2); width:fit-content;
+background-color: azure; text-align: center;
+ 
+margin-top: 50px; margin-left: 190px; margin-right: 20px; padding-top: 10px; padding-left: 20px; padding-bottom: 20px; padding-right: 40px;
+}
+</style>
 </head>
-<body class="bg-gray-50 min-h-screen">
-    <div class="container mx-auto px-4 py-8">
-        <h1 class="text-3xl font-bold text-center text-blue-600 mb-8">Page Replacement Algorithm Simulator</h1>
-        
-        <div class="bg-white rounded-lg shadow-lg p-6 mb-8">
-            <div class="flex flex-col md:flex-row gap-6">
-                <div class="flex-1">
-                    <h2 class="text-xl font-semibold mb-4">Simulation Controls</h2>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Algorithm</label>
-                        <select id="algorithm" class="w-full p-2 border border-gray-300 rounded-md">
-                            <option value="fifo">FIFO (First In First Out)</option>
-                            <option value="lru">LRU (Least Recently Used)</option>
-                            <option value="optimal">Optimal</option>
-                        </select>
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Number of Frames</label>
-                        <input type="number" id="frameCount" min="1" max="10" value="3" class="w-full p-2 border border-gray-300 rounded-md">
-                    </div>
-                    
-                    <div class="mb-4">
-                        <label class="block text-sm font-medium text-gray-700 mb-1">Page Reference String</label>
-                        <input type="text" id="pageRefString" value="7,0,1,2,0,3,0,4,2,3,0,3,2,1,2,0,1,7,0,1" class="w-full p-2 border border-gray-300 rounded-md" placeholder="e.g. 1,2,3,4,1,2">
-                    </div>
-                    
-                    <div class="flex gap-2">
-                        <button id="simulateBtn" class="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition">
-                            <i class="fas fa-play mr-2"></i> Simulate
-                        </button>
-                        <button id="stepBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition">
-                            <i class="fas fa-step-forward mr-2"></i> Step
-                        </button>
-                        <button id="resetBtn" class="bg-gray-200 text-gray-800 px-4 py-2 rounded-md hover:bg-gray-300 transition">
-                            <i class="fas fa-redo mr-2"></i> Reset
-                        </button>
-                    </div>
-                </div>
-                
-                <div class="flex-1">
-                    <h2 class="text-xl font-semibold mb-4">Statistics</h2>
-                    <div class="bg-gray-100 p-4 rounded-md">
-                        <div class="grid grid-cols-2 gap-4">
-                            <div>
-                                <p class="text-sm text-gray-600">Total References</p>
-                                <p id="totalRefs" class="text-2xl font-bold">0</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Page Faults</p>
-                                <p id="pageFaults" class="text-2xl font-bold text-red-500">0</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Page Hits</p>
-                                <p id="pageHits" class="text-2xl font-bold text-green-500">0</p>
-                            </div>
-                            <div>
-                                <p class="text-sm text-gray-600">Fault Rate</p>
-                                <p id="faultRate" class="text-2xl font-bold">0%</p>
-                            </div>
-                        </div>
-                    </div>
-                    
-                    <div class="mt-4">
-                        <h3 class="font-medium mb-2">Algorithm Explanation</h3>
-                        <p id="algorithmExplanation" class="text-sm text-gray-600">
-                            FIFO (First In First Out) replaces the page that has been in memory the longest when a new page needs to be loaded.
-                        </p>
-                    </div>
-                </div>
-            </div>
-        </div>
-        
-        <div class="bg-white rounded-lg shadow-lg p-6">
-            <h2 class="text-xl font-semibold mb-4">Simulation Visualization</h2>
-            
-            <div class="mb-6">
-                <h3 class="font-medium mb-2">Page Reference String</h3>
-                <div id="pageRefVisual" class="flex gap-2 overflow-x-auto py-2">
-                    <!-- Will be populated by JavaScript -->
-                </div>
-            </div>
-            
-            <div class="mb-6">
-                <h3 class="font-medium mb-2">Frames</h3>
-                <div id="framesVisual" class="flex flex-col gap-2">
-                    <!-- Will be populated by JavaScript -->
-                </div>
-            </div>
-            
-            <div class="mt-4">
-                <h3 class="font-medium mb-2">Legend</h3>
-                <div class="flex gap-4 text-sm">
-                    <div class="flex items-center">
-                        <div class="w-4 h-4 bg-blue-500 rounded-full mr-2"></div>
-                        <span>Current Page</span>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="w-4 h-4 bg-green-500 rounded-full mr-2"></div>
-                        <span>Page Hit</span>
-                    </div>
-                    <div class="flex items-center">
-                        <div class="w-4 h-4 bg-red-500 rounded-full mr-2"></div>
-                        <span>Page Fault</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+<div class="container-fluid" >
+<div class="navbar-header">
+<a class="navbar-brand"><span style="color:paleturquoise;font-size: 20px;">Page Replacement</span></a>
+</div>
+<div class="navbar-right">
+<ul class="nav navbar-nav">
+<li class="nav-item" ><a class="color-me" class="nav-link-active" href="home.html">HOME</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link-active" href="page.html">FIFO</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link-active" href="opt.html">OPT</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link-active" href="lru.html">LRU</a></li>
+</ul></div>
+</nav>
+<div class="afternav">
+<div><h2 style="font-family: 'Times New Roman', Times, serif;">PAGE REPLACEMENT ALGORITHMS</h2> </div>
+ 
+<div class="content">
+<!-- <h1>Page Replacement</h1> -->
+<p>One of the techniques which are used for memory management is paging. In paging, processes are divided into pages and main memory is divided into frames. Pages of a process are loaded into frames of main memory when required. Page Replacement Algorithm is used when a page fault occurs. Page Fault means the page referenced by the CPU is not present in the main memory. When the CPU generates the reference of a page, if there is any vacant frame available in the main memory then the page is loaded in that vacant frame. In another case, if there is no vacant frame available in the main memory, it is required to replace one of the pages in the main memory with the page referenced by the CPU. Page Replacement Algorithm is used to decide which page will be replaced to allocate memory to the current referenced page. Different Page Replacement Algorithms suggest different ways to decide which page is to be replaced. The main objective of these algorithms is to reduce the number of page faults.</p></div>
+</div> <div class="afternav1"> <div>
+<h2 style="font-family: 'Times New Roman', Times, serif;">PAGE REPLACEMENT ALGORITHMS</h2>
+</div><ul type="none">
+<li><h3 style="font-family: 'Times New Roman', Times, serif;">FIFO</h3><p>This algorithm replaces the page that was loaded into the memory earlier than any other page reference of the process.</p></li>
+<li><h3 style="font-family: 'Times New Roman', Times, serif;">OPTIMAL</h3><p>This algorithm replaces the page that will not be used for the longest period of time.</p></li>
+<li> <h3 style="font-family: 'Times New Roman', Times, serif;">LRU</h3><p>This algorithm replaces the page that has not been used for the longest period of time.</p></li>
+</ul> </div>
 
-    <script>
-        // State variables
-        let currentStep = 0;
-        let pageRefs = [];
-        let frames = [];
-        let stats = {
-            hits: 0,
-            faults: 0
-        };
-        let algorithm = 'fifo';
-        let frameCount = 3;
-        let fifoQueue = [];
-        let lruCounters = {};
-        let isSimulating = false;
-        let simulationInterval = null;
-        
-        // DOM elements
-        const pageRefVisual = document.getElementById('pageRefVisual');
-        const framesVisual = document.getElementById('framesVisual');
-        const simulateBtn = document.getElementById('simulateBtn');
-        const stepBtn = document.getElementById('stepBtn');
-        const resetBtn = document.getElementById('resetBtn');
-        const algorithmSelect = document.getElementById('algorithm');
-        const frameCountInput = document.getElementById('frameCount');
-        const pageRefStringInput = document.getElementById('pageRefString');
-        const totalRefsEl = document.getElementById('totalRefs');
-        const pageHitsEl = document.getElementById('pageHits');
-        const pageFaultsEl = document.getElementById('pageFaults');
-        const faultRateEl = document.getElementById('faultRate');
-        const algorithmExplanationEl = document.getElementById('algorithmExplanation');
-        
-        // Algorithm explanations
-        const algorithmExplanations = {
-            fifo: "FIFO (First In First Out) replaces the page that has been in memory the longest when a new page needs to be loaded.",
-            lru: "LRU (Least Recently Used) replaces the page that hasn't been used for the longest time when a new page needs to be loaded.",
-            optimal: "Optimal algorithm replaces the page that won't be used for the longest time in the future. This is theoretical as it requires knowledge of future references."
-        };
-        
-        // Initialize the simulation
-        function initSimulation() {
-            // Parse inputs
-            algorithm = algorithmSelect.value;
-            frameCount = parseInt(frameCountInput.value);
-            pageRefs = pageRefStringInput.value.split(',').map(Number);
-            
-            // Reset state
-            currentStep = 0;
-            frames = Array(frameCount).fill(null);
-            stats = { hits: 0, faults: 0 };
-            fifoQueue = [];
-            lruCounters = {};
-            
-            // Update stats display
-            updateStats();
-            
-            // Update algorithm explanation
-            algorithmExplanationEl.textContent = algorithmExplanations[algorithm];
-            
-            // Render visualization
-            renderPageRefVisual();
-            renderFramesVisual();
-        }
-        
-        // Update statistics display
-        function updateStats() {
-            const total = pageRefs.length;
-            const hitRate = total > 0 ? Math.round((stats.hits / total) * 100) : 0;
-            const faultRate = total > 0 ? Math.round((stats.faults / total) * 100) : 0;
-            
-            totalRefsEl.textContent = total;
-            pageHitsEl.textContent = stats.hits;
-            pageFaultsEl.textContent = stats.faults;
-            faultRateEl.textContent = `${faultRate}%`;
-        }
-        
-        // Render page reference visualization
-        function renderPageRefVisual() {
-            pageRefVisual.innerHTML = '';
-            
-            pageRefs.forEach((ref, index) => {
-                const refEl = document.createElement('div');
-                refEl.className = 'page-ref w-8 h-8 flex items-center justify-center border border-gray-300 rounded-md';
-                refEl.textContent = ref;
-                
-                if (index === currentStep) {
-                    refEl.classList.add('active');
-                }
-                
-                pageRefVisual.appendChild(refEl);
-            });
-        }
-        
-        // Render frames visualization
-        function renderFramesVisual() {
-            framesVisual.innerHTML = '';
-            
-            for (let i = 0; i < frameCount; i++) {
-                const frameRow = document.createElement('div');
-                frameRow.className = 'flex items-center gap-4';
-                
-                const frameLabel = document.createElement('div');
-                frameLabel.className = 'w-8 text-right font-medium';
-                frameLabel.textContent = `Frame ${i+1}:`;
-                frameRow.appendChild(frameLabel);
-                
-                const frameEl = document.createElement('div');
-                frameEl.className = 'frame w-12 h-12 flex items-center justify-center border border-gray-300 rounded-md text-xl font-bold';
-                frameEl.textContent = frames[i] !== null ? frames[i] : '-';
-                frameRow.appendChild(frameEl);
-                
-                framesVisual.appendChild(frameRow);
-            }
-        }
-        
-        // Perform one step of the simulation
-        function simulationStep() {
-            if (currentStep >= pageRefs.length) {
-                stopSimulation();
-                return;
-            }
-            
-            const page = pageRefs[currentStep];
-            let isHit = false;
-            
-            // Check if page is already in a frame (hit)
-            if (frames.includes(page)) {
-                isHit = true;
-                stats.hits++;
-                
-                // For LRU, update the counter
-                if (algorithm === 'lru') {
-                    lruCounters[page] = currentStep;
-                }
-            } 
-            // Page fault - need to replace a page
-            else {
-                stats.faults++;
-                
-                // Find an empty frame first
-                const emptyFrameIndex = frames.indexOf(null);
-                
-                if (emptyFrameIndex !== -1) {
-                    frames[emptyFrameIndex] = page;
-                    
-                    // For FIFO, add to queue
-                    if (algorithm === 'fifo') {
-                        fifoQueue.push(emptyFrameIndex);
-                    }
-                    
-                    // For LRU, set counter
-                    if (algorithm === 'lru') {
-                        lruCounters[page] = currentStep;
-                    }
-                } 
-                // No empty frames, need to replace
-                else {
-                    let replaceIndex;
-                    
-                    if (algorithm === 'fifo') {
-                        // FIFO replacement
-                        replaceIndex = fifoQueue.shift();
-                        frames[replaceIndex] = page;
-                        fifoQueue.push(replaceIndex);
-                    } 
-                    else if (algorithm === 'lru') {
-                        // LRU replacement - find page with smallest counter
-                        let minCounter = Infinity;
-                        let lruPage = null;
-                        
-                        for (const [p, counter] of Object.entries(lruCounters)) {
-                            if (counter < minCounter) {
-                                minCounter = counter;
-                                lruPage = parseInt(p);
-                            }
-                        }
-                        
-                        replaceIndex = frames.indexOf(lruPage);
-                        frames[replaceIndex] = page;
-                        lruCounters[page] = currentStep;
-                    } 
-                    else if (algorithm === 'optimal') {
-                        // Optimal replacement - find page not used for longest time in future
-                        let farthest = -1;
-                        let optimalPage = null;
-                        
-                        for (const p of frames) {
-                            let nextUse = -1;
-                            
-                            // Find next use of this page in remaining references
-                            for (let i = currentStep + 1; i < pageRefs.length; i++) {
-                                if (pageRefs[i] === p) {
-                                    nextUse = i;
-                                    break;
-                                }
-                            }
-                            
-                            // If page won't be used again, it's the best candidate
-                            if (nextUse === -1) {
-                                optimalPage = p;
-                                break;
-                            }
-                            
-                            // Otherwise track the farthest next use
-                            if (nextUse > farthest) {
-                                farthest = nextUse;
-                                optimalPage = p;
-                            }
-                        }
-                        
-                        replaceIndex = frames.indexOf(optimalPage);
-                        frames[replaceIndex] = page;
-                    }
-                }
-            }
-            
-            // Update visualization
-            updateVisualization(isHit);
-            
-            // Move to next step
-            currentStep++;
-            
-            // Update stats
-            updateStats();
-            
-            // If we've reached the end, stop simulation
-            if (currentStep >= pageRefs.length) {
-                stopSimulation();
-            }
-        }
-        
-        // Update visualization after a step
-        function updateVisualization(isHit) {
-            // Update page reference highlights
-            const pageRefElements = pageRefVisual.querySelectorAll('.page-ref');
-            pageRefElements.forEach((el, index) => {
-                el.classList.remove('active', 'hit', 'fault');
-                
-                if (index === currentStep) {
-                    el.classList.add(isHit ? 'hit' : 'fault');
-                } else if (index === currentStep + 1) {
-                    el.classList.add('active');
-                }
-            });
-            
-            // Update frames visualization
-            const frameElements = framesVisual.querySelectorAll('.frame');
-            frameElements.forEach((el, index) => {
-                el.classList.remove('active', 'hit', 'fault');
-                el.textContent = frames[index] !== null ? frames[index] : '-';
-                
-                // Highlight the frame that was involved in the hit/fault
-                if (!isHit && frames[index] === pageRefs[currentStep]) {
-                    el.classList.add('fault');
-                } else if (isHit && frames[index] === pageRefs[currentStep]) {
-                    el.classList.add('hit');
-                }
-            });
-        }
-        
-        // Start simulation
-        function startSimulation() {
-            if (isSimulating) return;
-            
-            isSimulating = true;
-            simulateBtn.innerHTML = '<i class="fas fa-pause mr-2"></i> Pause';
-            simulateBtn.classList.remove('bg-blue-600');
-            simulateBtn.classList.add('bg-yellow-500');
-            
-            simulationInterval = setInterval(() => {
-                simulationStep();
-            }, 1000);
-        }
-        
-        // Stop simulation
-        function stopSimulation() {
-            if (!isSimulating) return;
-            
-            isSimulating = false;
-            clearInterval(simulationInterval);
-            simulateBtn.innerHTML = '<i class="fas fa-play mr-2"></i> Simulate';
-            simulateBtn.classList.remove('bg-yellow-500');
-            simulateBtn.classList.add('bg-blue-600');
-        }
-        
-        // Event listeners
-        simulateBtn.addEventListener('click', () => {
-            if (currentStep === 0) {
-                initSimulation();
-            }
-            
-            if (isSimulating) {
-                stopSimulation();
-            } else {
-                startSimulation();
-            }
-        });
-        
-        stepBtn.addEventListener('click', () => {
-            if (currentStep === 0) {
-                initSimulation();
-            }
-            
-            if (!isSimulating) {
-                simulationStep();
-            }
-        });
-        
-        resetBtn.addEventListener('click', () => {
-            stopSimulation();
-            initSimulation();
-        });
-        
-        algorithmSelect.addEventListener('change', () => {
-            algorithmExplanationEl.textContent = algorithmExplanations[algorithmSelect.value];
-        });
-        
-        // Initialize
-        initSimulation();
-    </script>
+
+FIFO.html:
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Replacement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+ 
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css>
+<link rel="stylesheet" href="style.css">
+<script
+src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></scrip t>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></sc ript>
+<script src="main.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+<div class="container-fluid" >
+<div class="navbar-header">
+<a class="navbar-brand"><span style="color:paleturquoise;font- size: 20px;">Page Replacement</span></a>
+</div>
+<div class="navbar-right">
+<ul class="nav navbar-nav">
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="home.html">HOME</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="page.html">FIFO</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="opt.html">OPT</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="lru.html">LRU</a></li>
+</ul>
+</div>
+ 
+</nav>
+<div class="imageContainer container-fluid" align="center" id="design">
+<h1 style="padding-top:40px;"> First In First Out (FIFO)</h1>
+<form>
+<div class=container-fluid>
+<div class="form-group row" style="margin- left:40px;width:25vw;display:block">
+<input type="number" id="frames" class="form-control" placeholder="Number of frames:">
+</div>
+<div class="form-group row" style="margin- left:40px;width:25vw;display:block">
+<input type="text" id="rs" class="form-control" placeholder="Page reference string:">
+</div>
+<input type="button" id="calcbtn" style="margin-left:40px; margin- bottom:20px" class="btn btn-primary" onclick="fifo()" value="Simulate"><br>
+<input type="reset" style="margin-left:40px; margin-bottom:20px; display:none;" class="btn btn-primary" onClick="window.location.reload()" id="resetbtn" value="Reset">
+<br>
+<div id="div" class="table-hover" style="width:80vw;margin:auto;text-align:center"></div>
+<div id="sp1"></div>
+<div id="sp2"></div>
+</div>
+</form>
+</div>
+<div id="bottom"></div>
+ 
 </body>
+<script>
+var count = 0; var pages = []; var pf;
+var ph; var f; var rs; var txt;
+
+function fifo() {
+f = document.getElementById("frames").value; rs = document.getElementById("rs").value;
+var isnum = /^\d+$/.test(rs); if (f <= 0) {
+alert("Invalid input!"); return;
+} else if (!isnum) {
+alert("Use a number string (like 4761761272)"); return;
+}
+var x = document.getElementById("resetbtn").style.display = "block"; console.log(f);
+console.log(rs); var prev;
+pf = 0;
+ph = 0;
+ 
+var k = 0;
+var i, row = Number(f) + 1, j, col = rs.length;
+
+pages = new Array(row); for (i = 0; i < row; i++)
+pages[i] = new Array(col);
+
+
+for (i = 0; i < row - 1; i++) { for (j = 0; j < col; j++) pages[i][j] = "--";
+}
+for (j = 0; j < col; j++) { var smallest = -1; var flag = false;
+if (j > 0) {
+for (i = 0; i < row - 1; i++) pages[i][j] = pages[i][j - 1];
+}
+for (i = 0; i < row - 1; i++) { if (rs[k] == pages[i][j])
+flag = true;
+}
+if (flag == false) {
+for (i = 0; i < row - 1; i++) { if (pages[i][j] == "--") {
+smallest = i;
+ 
+break;
+}
+}
+if (smallest != -1) { pages[smallest][j] = rs[k];
+prev = (smallest + 1) % (row - 1);
+} else {
+pages[prev][j] = rs[k];
+prev = (prev + 1) % (row - 1);
+}
+pages[row - 1][j] = "PF"; k++;
+pf++; console.log("pf=", pf);
+} else {
+ph++; k++;
+console.log("ph=", ph);
+pages[row - 1][j] = "PH";
+}
+}
+txt = " "; var real; var m = 0;
+var $table = $("<table border='2'></table>");
+$table.addClass('table');
+$tbody = $("<tbody></tbody>");
+ 
+for (i = 0; i < row; i++) {
+
+
+var line = $("<tr></tr>"); for (j = 0; j < col; j++) {
+
+if (i == row - 1) {
+if (("PH".localeCompare(pages[i][j]) == 0)) { line.append('<td style="color:green">' + 'PH' + '</td>');
+} else {
+line.append('<td style="color:red">' + 'PF' + '</td>');
+}
+
+
+$tbody.prepend(line);
+
+
+} else {
+line.append($("<td></td>").html(pages[i][j] + ""));
+$tbody.prepend(line);
+}
+
+
+}
+$table.append($tbody);
+$table.appendTo($("#div"));
+$("#sp1").html('<p style="text-align:center">' + "<b>The no of page faults is:</b>" + "	" +
+'<span style="color:red">' + pf + '</span>' + '</p>')
+$("#sp2").html('<p style="text-align:center">' + "<b>The no of page hits is:</b>" + "	" +
+'<span style="color:green">' + ph + '</span>' + '</p>')
+ 
+
+console.log(m); document.getElementById('bottom').scrollIntoView(); txt = txt + "\n";
+console.log(txt); console.log(txt.length);
+
+document.getElementById("calcbtn").style.display = "none"; document.getElementById("frames").disabled = true; document.getElementById("rs").disabled = true;
+
+}
+
+
+function getRandomColor() { m = m + 1;
+var color = ''; if (m == 1) {
+color = 'blue';
+}
+if (m == 2) {
+color = 'yellow';
+}
+if (m == 3) { color = 'pink';
+}
+if (m == 4) {
+ 
+color = 'white';
+}
+
+
+return color;
+}
+}
+</script>
+
+
+OPT.html:
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Replacement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+> <link rel="stylesheet" href="style.css"><script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></scrip t> <script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></sc ript><script src="main.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+<div class="container-fluid" >
+<div class="navbar-header">
+<a class="navbar-brand"><span style="color:paleturquoise;font- size: 20px;">Page Replacement</span></a>
+</div>
+<div class="navbar-right">
+ 
+<ul class="nav navbar-nav">
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="home.html">HOME</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="page.html">FIFO</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="opt.html">OPT</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="lru.html">LRU</a></li>
+</u></div></nav>
+<div class="imageContainer container-fluid" align="center" id="design">
+<h1 style="padding-top:40px;">Optimal Replacement</h1>
+ 
+<form>
+ 
+
+
+<div class"container-fluid">
+<div class="form-group row" style="margin-
+ 
+left:40px;width:25vw;display:block">
+<input type="number" id="frames" class="form-control" placeholder="Number of frames:"></div>
+<div class="form-group row" style="margin- left:40px;width:25vw;display:block">
+<input type="text" id="rs" class="form- control" placeholder="Page Reference string:"></div>
+<input type="button" style="margin-left:40px; margin-bottom:20px" class="btn btn-primary" onclick="optimal()" value="Simulate" id="sim">
+<input type="reset" style="margin-left:40px; margin- bottom:20px; display:none;" class="btn btn-primary" onClick="window.location.reload()" id="resetbtn" value="Reset">
+<div id="div1" class="table-responsive" style="width:80vw;margin:auto;text-align:center"></div>
+<div id="sp1"></div>
+
+</body>
+<script>
+ 
+<div id="sp2"></div>
+</div>
+</form>
+<div id="bottom"></div></div>
+ 
+var count = 0; var pages = []; var pf;
+var ph; var f; var rs; var txt;
+
+function optimal() {
+f = document.getElementById("frames").value; rs = document.getElementById("rs").value;
+var isnum = /^\d+$/.test(rs); if (f <= 0) {
+alert("Invalid input!"); return;
+} else if (!isnum) {
+alert("Use a number string (like 4761761272)"); return;
+ 
+
+
+"block";
+ 
+}
+var x = document.getElementById("resetbtn").style.display = console.log(f);
+ 
+console.log(rs); var prev;
+pf = 0;
+ph = 0; var k = 0; var l;
+var farthest;
+var index = -9999;
+var i, row = Number(f) + 1, j, col = rs.length;
+
+pages = new Array(row); for (i = 0; i < row; i++)
+pages[i] = new Array(col);
+
+
+for (i = 0; i < row - 1; i++) { for (j = 0; j < col; j++)
+pages[i][j] = "--";
+}
+
+
+for (j = 0; j < col; j++) { var smallest = -1; var flag = false; if (j > 0) {
+for (i = 0; i < row - 1; i++) pages[i][j] = pages[i][j - 1];
+}
+ 
+for (i = 0; i < row - 1; i++) { if (rs[k] == pages[i][j])
+flag = true;
+}
+if (flag == false) {
+for (i = 0; i < row - 1; i++) { if (pages[i][j] == "--") {
+smallest = i; break;
+}
+}
+if (smallest != -1) {
+pages[smallest][j] = rs[k];
+} else {
+index = -9999;
+for (i = 0; i < row - 1; i++) {
+for (l = j + 1; l < col; l++) {
+if (pages[i][j] == rs[l]) { farthest = l; break;
+} else
+farthest = -2;
+}
+if (index < farthest)
+index = farthest; if (farthest == -2)
+break;
+ 
+}
+if (farthest != -2) {
+for (i = 0; i < row - 1; i++) {
+if (pages[i][j] == rs[index]) break;
+}
+}
+pages[i][j] = rs[k];
+}
+pages[row - 1][j] = "PF"; k++;
+pf++; console.log("pf=", pf);
+} else {
+ph++; k++;
+console.log("ph=", ph);
+pages[row - 1][j] = "PH";
+}
+}
+txt = " "; var real; var m = 0;
+var $table = $("<table border='2'></table>");
+$table.addClass('table');
+$tbody = $("<tbody></tbody>"); for (i = 0; i < row; i++) {
+ 
+var line = $("<tr></tr>");
+// line.css({'background-color': getRandomColor()}); for (j = 0; j < col; j++) {
+
+if (i == row - 1) {
+'PH' + '</td>');
+'PF' + '</td>');
+ 
+if (("PH".localeCompare(pages[i][j]) == 0)) { line.append('<td style="color:green">' +
+
+} else {
+line.append('<td style="color:red">' +
+ 
+}
+
+
+$tbody.prepend(line);
+
+
+ 
+
+
+""));
+ 
+} else {
+line.append($("<td></td>").html(pages[i][j] +
+
+$tbody.prepend(line);
+ 
+}
+
+
+
+}
+}
+$table.append($tbody);
+$table.appendTo($("#div1"));
+$("#sp1").html('<p style="text-align:center">' + "<b>The no of page faults is:</b>" + "	" + '<span style="color:red">' + pf + '</span>' + '</p>')
+$("#sp2").html('<p style="text-align:center">' + "<b>The no of page hits is:</b>" + "	" + '<span style="color:green">' + ph + '</span>' + '</p>')
+document.getElementById('bottom').scrollIntoView(); txt = txt + "\n";
+}
+</script>
 </html>
+ 
+$('input[type="button"]').attr('disabled', 'disabled'); document.getElementById("sim").style.display = "none"; document.getElementById("frames").disabled = true; document.getElementById("rs").disabled = true;
+
+                                                   LRU.html:
+<!DOCTYPE html>
+<html>
+<head>
+<title>Page Replacement</title>
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="stylesheet" href="https://maxcdn.bootstrapcdn.com/bootstrap/3.4.1/css/bootstrap.min.css"
+>
+<link rel="stylesheet" href="style.css">
+ 
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.11.3/jquery.min.js"></scrip t>
+<script src="http://maxcdn.bootstrapcdn.com/bootstrap/3.3.5/js/bootstrap.min.js"></sc ript>
+<script src="main.js"></script>
+</head>
+<body>
+<nav class="navbar navbar-inverse navbar-fixed-top">
+<div class="container-fluid" >
+<div class="navbar-header">
+<a class="navbar-brand"><span style="color:paleturquoise;font- size: 20px;">Page Replacement</span></a>
+</div>
+<div class="navbar-right">
+<ul class="nav navbar-nav">
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="home.html">HOME</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="page.html">FIFO</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="opt.html">OPT</a></li>
+<li class="nav-item" ><a class="color-me" class="nav-link- active" href="lru.html">LRU</a></li> </ul> </div></nav>
+<div class="imageContainer container-fluid" align="center" id="design">
+<h1 style="padding-top:40px;">Least Recently Used (LRU)></h1>
+<form>
+<div class"container-fluid">
+<div class="form-group row" style="margin- left:40px;width:25vw;display:block">
+ 
+<input type="number" id="frames" class="form-control" placeholder="Number of frames:"></div>
+<div class="form-group row" style="margin- left:40px;width:25vw;display:block">
+<input type="text" id="rs" class="form-control" placeholder="Page Reference string:"></div>
+<input type="button" style="margin-left:40px; margin-bottom:20px" class="btn btn-primary" onclick="lru()" value="Simulate" id="sim">
+<input type="reset" style="margin-left:40px; margin-bottom:20px; display:none;" class="btn btn-primary" onClick="window.location.reload()" id="resetbtn" value="Reset">
+<div id="div1" class="table-responsive" style="width:80vw;margin:auto;text-align:center"></div>
+<div id="sp1"></div>
+<div id="sp2"></div>
+</div>
+</form>
+<div id="bottom"></div>
+</div>
+</body>
+<script>
+var count = 0; var pages = []; var pf;
+var ph; var f; var rs; var txt;
+function lru() {
+f = document.getElementById("frames").value;
+ 
+rs = document.getElementById("rs").value; var isnum = /^\d+$/.test(rs);
+if (f <= 0) { alert("Invalid input!"); return;
+} else if (!isnum) {
+alert("Use a number string (like 4761761272)"); return;
+}
+var x = document.getElementById("resetbtn").style.display = "block";; var prev;
+pf = 0;
+ph = 0; var k = 0; var l;
+var least; var index;
+var i, row = Number(f) + 1, j, col = rs.length;
+
+pages = new Array(row); for (i = 0; i < row; i++)
+pages[i] = new Array(col);
+
+
+for (i = 0; i < row - 1; i++) { for (j = 0; j < col; j++) pages[i][j] = "--";
+ 
+}
+
+
+for (j = 0; j < col; j++) { var smallest = -1;
+var flag = false; if (j > 0) {
+for (i = 0; i < row - 1; i++) pages[i][j] = pages[i][j - 1];
+}
+for (i = 0; i < row - 1; i++) { if (rs[k] == pages[i][j])
+flag = true;
+}
+if (flag == false) {
+for (i = 0; i < row - 1; i++) { if (pages[i][j] == "--") {
+smallest = i; break;
+}
+}
+if (smallest != -1) { pages[smallest][j] = rs[k];
+} else {
+index = 9999;
+for (i = 0; i < row - 1; i++) { for (l = j - 1; l >= 0; l--) {
+if (pages[i][j] == rs[l]) {
+ 
+least = l; break;
+}
+
+
+}
+if (index > least) index = least;
+
+}
+
+
+for (i = 0; i < row - 1; i++) { if (pages[i][j] == rs[index])
+break;
+}
+
+
+pages[i][j] = rs[k];
+}
+pages[row - 1][j] = "PF"; k++;
+pf++; console.log("pf=", pf);
+} else {
+ph++; k++;
+console.log("ph=", ph);
+pages[row - 1][j] = "PH";
+}
+ 
+}
+txt = " "; var real; var m = 0;
+var $table = $("<table border='2'></table>");
+$table.addClass('table');
+$tbody = $("<tbody></tbody>"); for (i = 0; i < row; i++) {
+var line = $("<tr></tr>");
+// line.css({'background-color': getRandomColor()}); for (j = 0; j < col; j++) {
+
+if (i == row - 1) {
+
+
+
+if (("PH".localeCompare(pages[i][j]) == 0)) { line.append('<td style="color:green">' + 'PH' + '</td>');
+} else {
+line.append('<td style="color:red">' + 'PF' + '</td>');
+}
+
+
+$tbody.prepend(line);
+
+
+} else {
+line.append($("<td></td>").html(pages[i][j] + ""));
+$tbody.prepend(line);
+} }}
+ 
+$table.append($tbody);
+$table.appendTo($("#div1"));
+$("#sp1").html('<p style="text-align:center">' + "<b>The no of page faults is:</b>" + "	" + '<span style="color:red">' + pf + '</span>' + '</p>')
+$("#sp2").html('<p style="text-align:center">' + "<b>The no of page hits is:</b>" + "	" + '<span style="color:green">' + ph + '</span>' + '</p>')
+document.getElementById('bottom').scrollIntoView(); txt = txt + "\n";
+console.log(txt); document.getElementById("sim").style.display = "none"; document.getElementById("frames").disabled = true; document.getElementById("rs").disabled = true;
+}
+</script>
+</html>
+
